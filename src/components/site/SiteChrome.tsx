@@ -14,6 +14,7 @@ const NAV = [
   { to: "/layout", label: "Plot Layout" },
   { to: "/process", label: "Registration Process" },
   { to: "/contact", label: "Contact Us" },
+  { to: "/ownership", label: "Ownership" },
 ] as const;
 
 export function SiteHeader() {
@@ -28,14 +29,14 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4">
-        <Link to="/" className="flex items-center gap-2 font-display text-lg font-bold text-navy">
+      <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-4">
+        <Link to="/" className="flex min-w-0 items-center gap-2 font-display text-lg font-bold text-navy">
           <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground">
             <Trees className="h-5 w-5" />
           </span>
           <span className="truncate">{v?.name ?? "Sawargseema Ventures"}</span>
         </Link>
-        <nav className="ml-auto hidden items-center gap-1 lg:flex">
+        <nav className="ml-auto hidden items-center gap-1 xl:flex">
           {NAV.map((n) => (
             <Link
               key={n.to}
@@ -48,7 +49,7 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
-        <div className="ml-auto flex items-center gap-2 lg:ml-2">
+        <div className="ml-auto flex shrink-0 items-center gap-2 xl:ml-2">
           {isAdmin && (
             <Button asChild variant="secondary" size="sm" className="hidden sm:inline-flex">
               <Link to="/admin"><Shield className="h-4 w-4" /> Admin</Link>
@@ -59,13 +60,13 @@ export function SiteHeader() {
           ) : (
             <Button asChild size="sm"><Link to="/auth">Login</Link></Button>
           )}
-          <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen(!open)} aria-label="Menu">
+          <Button variant="ghost" size="icon" className="xl:hidden" onClick={() => setOpen(!open)} aria-label="Menu">
             {open ? <X /> : <Menu />}
           </Button>
         </div>
       </div>
       {open && (
-        <nav className="border-t px-4 py-2 lg:hidden">
+        <nav className="border-t px-4 py-2 xl:hidden">
           {NAV.map((n) => (
             <Link key={n.to} to={n.to} onClick={() => setOpen(false)} className="block py-2 text-sm font-medium">
               {n.label}

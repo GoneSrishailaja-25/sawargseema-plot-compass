@@ -90,11 +90,14 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
-      queryClient.invalidateQueries();
+      if (event === "SIGNED_OUT") queryClient.clear();
+      else queryClient.invalidateQueries();
+      router.invalidate();
     });
     const channel = supabase
       .channel(`plots-${Math.random().toString(36).slice(2)}`)
@@ -106,7 +109,7 @@ function RootComponent() {
       sub.subscription.unsubscribe();
       supabase.removeChannel(channel);
     };
-  }, [queryClient]);
+  }, [queryClient, router]);
 
   return (
     <QueryClientProvider client={queryClient}>

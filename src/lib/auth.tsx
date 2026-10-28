@@ -2,17 +2,17 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-type AuthState = { user: User | null; isAdmin: boolean; loading: boolean };
-const AuthCtx = createContext<AuthState>({ user: null, isAdmin: false, loading: true });
+type AuthState = { user: User | null; isAdmin: boolean; isOfficer: boolean; loading: boolean };
+const AuthCtx = createContext<AuthState>({ user: null, isAdmin: false, isOfficer: false, loading: true });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AuthState>({ user: null, isAdmin: false, loading: true });
+  const [state, setState] = useState<AuthState>({ user: null, isAdmin: false, isOfficer: false, loading: true });
 
   useEffect(() => {
     const load = async (user: User | null) => {
-      if (!user) return setState({ user: null, isAdmin: false, loading: false });
+      if (!user) return setState({ user: null, isAdmin: false, isOfficer: false, loading: false });
       const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
-      setState({ user, isAdmin: !!data?.some((r) => r.role === "admin"), loading: false });
+      setState({ user, isAdmin: !!data?.some((r) => r.role === "admin"), isOfficer: !!data?.some((r) => r.role === "officer"), loading: false });
     };
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "TOKEN_REFRESHED") return;
