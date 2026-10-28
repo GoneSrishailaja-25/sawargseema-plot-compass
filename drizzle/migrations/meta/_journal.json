@@ -29,6 +29,13 @@
       "when": 1793204571989,
       "tag": "0003_ownership_upload_validation_access",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793204780557,
+      "tag": "0004_ownership_notification_trigger_fields",
+      "breakpoints": true
     }
   ]
 }
