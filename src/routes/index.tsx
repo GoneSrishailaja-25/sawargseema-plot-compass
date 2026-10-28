@@ -13,6 +13,8 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Live plot availability, prices per square yard and an interactive layout of Sawargseema Ventures." },
       { property: "og:title", content: "Sawargseema Ventures — Open Plots for Sale" },
       { property: "og:description", content: "Live plot availability, prices and interactive layout." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Index,

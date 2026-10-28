@@ -15,6 +15,8 @@ export const Route = createFileRoute("/plots")({
       { name: "description", content: "Search, filter and sort plots by size, price, phase, direction and availability." },
       { property: "og:title", content: "Plots & Prices — Sawargseema Ventures" },
       { property: "og:description", content: "Find the right plot by size, price and facing." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Plots,

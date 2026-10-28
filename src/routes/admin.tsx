@@ -26,6 +26,8 @@ export const Route = createFileRoute("/admin")({
       { name: "description", content: "Manage plots, phases, enquiries and venture details." },
       { property: "og:title", content: "Admin Panel — Sawargseema Ventures" },
       { property: "og:description", content: "Venture administration." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Admin,

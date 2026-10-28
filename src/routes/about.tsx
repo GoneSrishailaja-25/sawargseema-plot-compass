@@ -10,6 +10,8 @@ export const Route = createFileRoute("/about")({
       { name: "description", content: "About the venture, its phases, location and total area." },
       { property: "og:title", content: "About Sawargseema Ventures" },
       { property: "og:description", content: "Venture details, phases and location." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: About,
