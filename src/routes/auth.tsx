@@ -42,11 +42,11 @@ function AuthPage() {
   const doLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const r = z.object({ mobile, password: z.string().min(1, "Password required") }).safeParse(login);
-    if (!r.success) return toast.error(r.error.issues[0].message);
+    if (!r.success) return void toast.error(r.error.issues[0]?.message ?? "Invalid input");
     setBusy(true);
     const { error } = await supabase.auth.signInWithPassword({ email: mobileToEmail(r.data.mobile), password: r.data.password });
     setBusy(false);
-    if (error) return toast.error("Invalid mobile number or password");
+    if (error) return void toast.error("Invalid mobile number or password");
     toast.success("Welcome back!");
     navigate({ to: "/plots" });
   };
@@ -54,7 +54,7 @@ function AuthPage() {
   const doRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     const r = registerSchema.safeParse(reg);
-    if (!r.success) return toast.error(r.error.issues[0].message);
+    if (!r.success) return void toast.error(r.error.issues[0]?.message ?? "Invalid input");
     setBusy(true);
     const { password: pw, ...meta } = r.data;
     const { data, error } = await supabase.auth.signUp({
@@ -63,8 +63,8 @@ function AuthPage() {
       options: { data: meta, emailRedirectTo: window.location.origin },
     });
     setBusy(false);
-    if (error) return toast.error(error.message.includes("registered") ? "This mobile number is already registered" : error.message);
-    if (!data.session) return toast.info("Account created. Please log in.");
+    if (error) return void toast.error(error.message.includes("registered") ? "This mobile number is already registered" : error.message);
+    if (!data.session) return void toast.info("Account created. Please log in.");
     toast.success("Account created!");
     navigate({ to: "/plots" });
   };

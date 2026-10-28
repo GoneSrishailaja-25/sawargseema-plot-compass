@@ -20,7 +20,7 @@ function About() {
   const { data: phases = [] } = useQuery(phasesQuery);
   return (
     <>
-      <PageHeader title={`About ${v?.name ?? ""}`} sub={v?.tagline} />
+      <PageHeader title={`About ${v?.name ?? ""}`} sub={v?.tagline ?? ""} />
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 md:grid-cols-3">
         <div className="md:col-span-2">
           <p className="whitespace-pre-line leading-relaxed">{v?.about}</p>

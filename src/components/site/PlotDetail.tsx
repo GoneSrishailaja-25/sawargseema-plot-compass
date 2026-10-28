@@ -36,7 +36,7 @@ export function PlotDetailDialog({ plot, onClose }: { plot: Plot | null; onClose
       message: msg.slice(0, 1000),
     });
     setBusy(false);
-    if (error) return toast.error("Could not send request. Please check your profile mobile number.");
+    if (error) return void toast.error("Could not send request. Please check your profile mobile number.");
     toast.success("Reservation request sent. Our representative will contact you.");
     setMsg("");
     onClose();

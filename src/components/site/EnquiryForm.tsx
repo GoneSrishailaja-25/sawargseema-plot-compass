@@ -25,7 +25,7 @@ export function EnquiryForm() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const r = schema.safeParse(f);
-    if (!r.success) return toast.error(r.error.issues[0].message);
+    if (!r.success) return void toast.error(r.error.issues[0]?.message ?? "Invalid input");
     setBusy(true);
     const { error } = await supabase.from("enquiries").insert({
       ...r.data,
@@ -34,7 +34,7 @@ export function EnquiryForm() {
       kind: "contact",
     });
     setBusy(false);
-    if (error) return toast.error("Could not send enquiry. Please try again.");
+    if (error) return void toast.error("Could not send enquiry. Please try again.");
     toast.success("Thank you! We'll get back to you shortly.");
     setF({ name: "", mobile: "", plot: "", message: "" });
   };

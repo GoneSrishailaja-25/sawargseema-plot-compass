@@ -32,11 +32,11 @@ export const Route = createFileRoute("/admin")({
 
 const sel = "h-9 w-full rounded-md border bg-background px-2 text-sm";
 
-function downloadCsv(name: string, rows: Record<string, unknown>[]) {
-  if (!rows.length) return toast.info("Nothing to export");
-  const keys = Object.keys(rows[0]);
+function downloadCsv(name: string, rows: object[]) {
+  if (!rows.length) return void toast.info("Nothing to export");
+  const keys = Object.keys(rows[0] ?? {});
   const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-  const csv = [keys.join(","), ...rows.map((r) => keys.map((k) => esc(r[k])).join(","))].join("\n");
+  const csv = [keys.join(","), ...rows.map((r) => keys.map((k) => esc((r as Record<string, unknown>)[k])).join(","))].join("\n");
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
   a.download = name;
@@ -98,15 +98,15 @@ function PlotsAdmin() {
   const save = async () => {
     if (!edit) return;
     const n = Number(edit.plot_number), sz = Number(edit.size_sqyd), pr = Number(edit.price_per_sqyd);
-    if (!Number.isInteger(n) || n <= 0) return toast.error("Plot number must be a positive whole number");
-    if (!(sz > 0)) return toast.error("Size must be greater than 0");
-    if (!(pr >= 0) || edit.price_per_sqyd === "") return toast.error("Enter a valid price");
+    if (!Number.isInteger(n) || n <= 0) return void toast.error("Plot number must be a positive whole number");
+    if (!(sz > 0)) return void toast.error("Size must be greater than 0");
+    if (!(pr >= 0) || edit.price_per_sqyd === "") return void toast.error("Enter a valid price");
     const row = {
       plot_number: n, phase_id: edit.phase_id || null, size_sqyd: sz, price_per_sqyd: pr,
       facing: edit.facing, status: edit.status, dimensions: edit.dimensions, location_note: edit.location_note, amenities: edit.amenities,
     };
     const { error } = edit.id ? await supabase.from("plots").update(row).eq("id", edit.id) : await supabase.from("plots").insert(row);
-    if (error) return toast.error(error.message.includes("duplicate") ? "Plot number already exists" : error.message);
+    if (error) return void toast.error(error.message.includes("duplicate") ? "Plot number already exists" : error.message);
     toast.success("Plot saved");
     setEdit(null);
     refresh();
@@ -114,14 +114,14 @@ function PlotsAdmin() {
 
   const quickStatus = async (p: Plot, status: PlotStatus) => {
     const { error } = await supabase.from("plots").update({ status }).eq("id", p.id);
-    if (error) return toast.error(error.message);
+    if (error) return void toast.error(error.message);
     refresh();
   };
 
   const del = async (p: Plot) => {
     if (!confirm(`Delete Plot ${p.plot_number}?`)) return;
     const { error } = await supabase.from("plots").delete().eq("id", p.id);
-    if (error) return toast.error(error.message);
+    if (error) return void toast.error(error.message);
     refresh();
   };
 
@@ -218,20 +218,20 @@ function PhasesAdmin() {
   const refresh = () => { qc.invalidateQueries({ queryKey: ["phases"] }); qc.invalidateQueries({ queryKey: ["plots"] }); };
 
   const add = async () => {
-    if (!name.trim()) return toast.error("Phase name is required");
+    if (!name.trim()) return void toast.error("Phase name is required");
     const { error } = await supabase.from("phases").insert({ name: name.trim(), description: desc, sort_order: phases.length + 1 });
-    if (error) return toast.error(error.message);
+    if (error) return void toast.error(error.message);
     setName(""); setDesc(""); refresh();
   };
   const rename = async (id: string, field: "name" | "description", value: string) => {
-    const { error } = await supabase.from("phases").update({ [field]: value }).eq("id", id);
-    if (error) return toast.error(error.message);
+    const { error } = await supabase.from("phases").update(field === "name" ? { name: value } : { description: value }).eq("id", id);
+    if (error) return void toast.error(error.message);
     refresh();
   };
   const del = async (id: string) => {
     if (!confirm("Delete this phase? Its plots will become unassigned.")) return;
     const { error } = await supabase.from("phases").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) return void toast.error(error.message);
     refresh();
   };
 
@@ -267,7 +267,7 @@ function EnquiriesAdmin() {
   const plotNo = (id: string | null) => plots.find((p) => p.id === id)?.plot_number ?? "—";
   const setStatus = async (id: string, status: string) => {
     const { error } = await supabase.from("enquiries").update({ status }).eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) return void toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["enquiries"] });
   };
 
@@ -348,13 +348,14 @@ function VentureAdmin() {
   }, [v]);
 
   const save = async () => {
-    if (!f.name?.trim()) return toast.error("Venture name is required");
+    const g = (k: string) => f[k] ?? "";
+    if (!g("name").trim()) return void toast.error("Venture name is required");
     const { error } = await supabase.from("venture").update({
-      name: f.name.trim(), tagline: f.tagline, about: f.about, location: f.location, address: f.address, phone: f.phone,
-      email: f.email, whatsapp: f.whatsapp, map_embed_url: f.map_embed_url, total_area_sqyd: Number(f.total_area_sqyd) || 0,
+      name: g("name").trim(), tagline: g("tagline"), about: g("about"), location: g("location"), address: g("address"), phone: g("phone"),
+      email: g("email"), whatsapp: g("whatsapp"), map_embed_url: g("map_embed_url"), total_area_sqyd: Number(g("total_area_sqyd")) || 0,
       updated_at: new Date().toISOString(),
     }).eq("id", 1);
-    if (error) return toast.error(error.message);
+    if (error) return void toast.error(error.message);
     toast.success("Venture details updated");
     qc.invalidateQueries({ queryKey: ["venture"] });
   };
@@ -367,7 +368,7 @@ function VentureAdmin() {
           <Input value={f[k] ?? ""} onChange={(e) => setF({ ...f, [k]: e.target.value })} />
         </div>
       ))}
-      <div className="sm:col-span-2"><Label>About</Label><Textarea rows={5} value={f.about ?? ""} onChange={(e) => setF({ ...f, about: e.target.value })} /></div>
+      <div className="sm:col-span-2"><Label>About</Label><Textarea rows={5} value={f["about"] ?? ""} onChange={(e) => setF({ ...f, about: e.target.value })} /></div>
       <Button className="sm:col-span-2" onClick={save}>Save details</Button>
     </div>
   );
