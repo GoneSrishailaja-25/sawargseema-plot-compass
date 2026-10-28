@@ -13,6 +13,13 @@ export const STATUSES: PlotStatus[] = ["available", "reserved", "sold"];
 export const FACINGS: PlotFacing[] = ["north", "south", "east", "west"];
 
 export const MOBILE_RE = /^[6-9]\d{9}$/;
+/** Strip spaces/dashes and a leading +91 / 91 / 0 so only the 10-digit number remains. */
+export const normalizeMobile = (raw: string) => {
+  let d = raw.replace(/\D/g, "");
+  if (d.length > 10 && d.startsWith("91")) d = d.slice(2);
+  else if (d.length > 10 && d.startsWith("0")) d = d.slice(1);
+  return d.slice(0, 10);
+};
 export const mobileToEmail = (mobile: string) => `${mobile}@sawargseema.app`;
 
 export const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
