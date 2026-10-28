@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { MOBILE_RE, plotsQuery } from "@/lib/data";
+import { MOBILE_RE, normalizeMobile, plotsQuery } from "@/lib/data";
 
 const schema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
@@ -43,7 +43,7 @@ export function EnquiryForm() {
     <form onSubmit={submit} className="space-y-4 rounded-2xl border bg-card p-6 shadow-card">
       <div className="grid gap-4 sm:grid-cols-2">
         <div><Label>Name *</Label><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} maxLength={100} /></div>
-        <div><Label>Mobile *</Label><Input value={f.mobile} inputMode="numeric" onChange={(e) => setF({ ...f, mobile: e.target.value.replace(/\D/g, "").slice(0, 10) })} /></div>
+        <div><Label>Mobile *</Label><Input value={f.mobile} inputMode="numeric" onChange={(e) => setF({ ...f, mobile: normalizeMobile(e.target.value) })} /></div>
       </div>
       <div>
         <Label>Preferred plot</Label>

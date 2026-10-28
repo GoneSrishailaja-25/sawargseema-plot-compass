@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { MOBILE_RE, mobileToEmail } from "@/lib/data";
+import { MOBILE_RE, mobileToEmail, normalizeMobile } from "@/lib/data";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -37,7 +37,16 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [login, setLogin] = useState({ mobile: "", password: "" });
   const [reg, setReg] = useState({ full_name: "", mobile: "", address: "", contact_email: "", password: "" });
-  const digits = (s: string) => s.replace(/\D/g, "").slice(0, 10);
+  const digits = normalizeMobile;
+  const MobileInput = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+    <>
+      <div className="flex">
+        <span className="inline-flex items-center rounded-l-md border border-r-0 bg-muted px-3 text-sm text-muted-foreground">+91</span>
+        <Input className="rounded-l-none" inputMode="numeric" autoComplete="tel-national" placeholder="98765 43210" value={value} onChange={(e) => onChange(digits(e.target.value))} />
+      </div>
+      {value.length === 10 && !MOBILE_RE.test(value) && <p className="mt-1 text-xs text-destructive">Indian mobile numbers start with 6, 7, 8 or 9</p>}
+    </>
+  );
 
   const doLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,7 +87,7 @@ function AuthPage() {
         </TabsList>
         <TabsContent value="login">
           <form onSubmit={doLogin} className="mt-4 space-y-4">
-            <div><Label>Mobile number</Label><Input inputMode="numeric" value={login.mobile} onChange={(e) => setLogin({ ...login, mobile: digits(e.target.value) })} /></div>
+            <div><Label>Mobile number</Label>{MobileInput({ value: login.mobile, onChange: (v) => setLogin({ ...login, mobile: v }) })}</div>
             <div><Label>Password</Label><Input type="password" value={login.password} onChange={(e) => setLogin({ ...login, password: e.target.value })} /></div>
             <Button className="w-full" disabled={busy}>Login</Button>
           </form>
@@ -86,7 +95,7 @@ function AuthPage() {
         <TabsContent value="register">
           <form onSubmit={doRegister} className="mt-4 space-y-3">
             <div><Label>Full name *</Label><Input value={reg.full_name} onChange={(e) => setReg({ ...reg, full_name: e.target.value })} /></div>
-            <div><Label>Mobile number *</Label><Input inputMode="numeric" value={reg.mobile} onChange={(e) => setReg({ ...reg, mobile: digits(e.target.value) })} /></div>
+            <div><Label>Mobile number *</Label>{MobileInput({ value: reg.mobile, onChange: (v) => setReg({ ...reg, mobile: v }) })}</div>
             <div><Label>Address *</Label><Textarea value={reg.address} onChange={(e) => setReg({ ...reg, address: e.target.value })} /></div>
             <div><Label>Email (optional)</Label><Input type="email" value={reg.contact_email} onChange={(e) => setReg({ ...reg, contact_email: e.target.value })} /></div>
             <div><Label>Password *</Label><Input type="password" value={reg.password} onChange={(e) => setReg({ ...reg, password: e.target.value })} /></div>
