@@ -15,6 +15,13 @@
       "when": 1793204491183,
       "tag": "0001_ownership_officer_role",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793204541002,
+      "tag": "0002_secure_ownership_verification",
+      "breakpoints": true
     }
   ]
 }

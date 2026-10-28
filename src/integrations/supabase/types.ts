@@ -58,6 +58,210 @@ export type Database = {
           },
         ]
       }
+      ownership_cases: {
+        Row: {
+          created_at: string
+          customer_id: string
+          id: string
+          plot_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          id?: string
+          plot_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          id?: string
+          plot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ownership_cases_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ownership_cases_plot_id_fkey"
+            columns: ["plot_id"]
+            isOneToOne: true
+            referencedRelation: "plots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ownership_documents: {
+        Row: {
+          case_id: string
+          category: string
+          created_at: string
+          file_name: string
+          id: string
+          review_note: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          storage_path: string
+          uploaded_by: string
+        }
+        Insert: {
+          case_id: string
+          category: string
+          created_at?: string
+          file_name: string
+          id?: string
+          review_note?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          storage_path: string
+          uploaded_by?: string
+        }
+        Update: {
+          case_id?: string
+          category?: string
+          created_at?: string
+          file_name?: string
+          id?: string
+          review_note?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          storage_path?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ownership_documents_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "ownership_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ownership_notifications: {
+        Row: {
+          case_id: string
+          created_at: string
+          id: string
+          message: string
+          read_at: string | null
+          user_id: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          id?: string
+          message: string
+          read_at?: string | null
+          user_id: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          read_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ownership_notifications_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "ownership_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ownership_questions: {
+        Row: {
+          case_id: string
+          created_at: string
+          id: string
+          question: string
+          replied_at: string | null
+          reply: string
+          user_id: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          id?: string
+          question: string
+          replied_at?: string | null
+          reply?: string
+          user_id?: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          id?: string
+          question?: string
+          replied_at?: string | null
+          reply?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ownership_questions_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "ownership_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ownership_reviews: {
+        Row: {
+          case_id: string
+          created_at: string
+          document_id: string
+          id: string
+          note: string
+          officer_id: string
+          status: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          document_id: string
+          id?: string
+          note: string
+          officer_id: string
+          status: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          document_id?: string
+          id?: string
+          note?: string
+          officer_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ownership_reviews_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "ownership_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ownership_reviews_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "ownership_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       phases: {
         Row: {
           created_at: string
@@ -236,12 +440,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_read_ownership: { Args: { _case: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      mark_ownership_notices_read: { Args: never; Returns: undefined }
+      reply_ownership_question: {
+        Args: { _question: string; _reply: string }
+        Returns: undefined
+      }
+      review_ownership_document: {
+        Args: { _document: string; _note: string; _status: string }
+        Returns: undefined
+      }
+      set_ownership_officer: {
+        Args: { _enabled: boolean; _user: string }
+        Returns: undefined
       }
     }
     Enums: {
