@@ -55,7 +55,7 @@ function AuthPage() {
     setBusy(true);
     const { error } = await supabase.auth.signInWithPassword({ email: mobileToEmail(r.data.mobile), password: r.data.password });
     setBusy(false);
-    if (error) return void toast.error("Invalid mobile number or password");
+    if (error) return void toast.error("Invalid mobile number or password. If you haven't registered yet, use the Register tab first.");
     toast.success("Welcome back!");
     navigate({ to: "/plots" });
   };
@@ -72,7 +72,15 @@ function AuthPage() {
       options: { data: meta, emailRedirectTo: window.location.origin },
     });
     setBusy(false);
-    if (error) return void toast.error(error.message.includes("registered") ? "This mobile number is already registered" : error.message);
+    if (error) {
+      const m = error.message.toLowerCase();
+      return void toast.error(
+        m.includes("registered") ? "This mobile number is already registered. Please log in."
+        : m.includes("weak") || m.includes("pwned") || m.includes("guess") ? "Registration failed: this password is too common. Please choose a stronger password (mix letters, numbers and symbols)."
+        : `Registration failed: ${error.message}`,
+        { duration: 8000 },
+      );
+    }
     if (!data.session) return void toast.info("Account created. Please log in.");
     toast.success("Account created!");
     navigate({ to: "/plots" });
