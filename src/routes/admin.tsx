@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { LoginRequired, PageHeader } from "@/components/site/SiteChrome";
 import { Charts, StatCards } from "@/components/site/Stats";
 import { statusBadge } from "@/components/site/PlotDetail";
+import { OwnershipWorkspace } from "@/components/site/OwnershipWorkspace";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { cap, FACINGS, inr, phasesQuery, plotsQuery, STATUSES, ventureQuery, type Plot, type PlotFacing, type PlotStatus } from "@/lib/data";
@@ -25,6 +26,8 @@ export const Route = createFileRoute("/admin")({
       { name: "description", content: "Manage plots, phases, enquiries and venture details." },
       { property: "og:title", content: "Admin Panel — Sawargseema Ventures" },
       { property: "og:description", content: "Venture administration." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Admin,
@@ -65,6 +68,7 @@ function Admin() {
             <TabsTrigger value="enquiries">Enquiries</TabsTrigger>
             <TabsTrigger value="customers">Customers</TabsTrigger>
             <TabsTrigger value="venture">Venture details</TabsTrigger>
+            <TabsTrigger value="ownership">Ownership</TabsTrigger>
           </TabsList>
           <TabsContent value="dashboard" className="mt-6 space-y-6">
             <StatCards plots={plots} totalArea={Number(v?.total_area_sqyd ?? 0)} />
@@ -75,6 +79,7 @@ function Admin() {
           <TabsContent value="enquiries" className="mt-6"><EnquiriesAdmin /></TabsContent>
           <TabsContent value="customers" className="mt-6"><CustomersAdmin /></TabsContent>
           <TabsContent value="venture" className="mt-6"><VentureAdmin /></TabsContent>
+          <TabsContent value="ownership" className="mt-6"><OwnershipWorkspace userId={user.id} /></TabsContent>
         </Tabs>
       </div>
     </>

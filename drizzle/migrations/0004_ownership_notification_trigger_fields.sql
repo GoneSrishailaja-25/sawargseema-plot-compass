@@ -1,0 +1,4 @@
+CREATE OR REPLACE FUNCTION public.ownership_notify() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ DECLARE recipient uuid; notice text; target_case uuid; BEGIN
+ IF TG_TABLE_NAME='ownership_cases' THEN recipient:=NEW.customer_id; target_case:=NEW.id; notice:='Ownership verification opened. Missing documents: ownership document, sale deed, approval record.';
+ ELSE target_case:=NEW.case_id; SELECT customer_id INTO recipient FROM public.ownership_cases WHERE id=target_case; notice:= CASE WHEN TG_OP='INSERT' THEN 'Document uploaded for review: '||NEW.file_name ELSE NEW.file_name||': '||NEW.status||CASE WHEN NEW.review_note<>'' THEN ' — '||NEW.review_note ELSE '' END END; END IF;
+ INSERT INTO public.ownership_notifications(user_id,case_id,message) VALUES(recipient,target_case,notice); RETURN NEW; END $$;

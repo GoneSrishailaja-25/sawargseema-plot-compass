@@ -13,6 +13,8 @@ export const Route = createFileRoute("/contact")({
       { name: "description", content: "Office address, phone, WhatsApp and an enquiry form for plot bookings." },
       { property: "og:title", content: "Contact Sawargseema Ventures" },
       { property: "og:description", content: "Send an enquiry about any plot." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Contact,

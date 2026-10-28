@@ -11,6 +11,8 @@ export const Route = createFileRoute("/process")({
       { name: "description", content: "Step-by-step guide from account creation to property registration, with required documents." },
       { property: "og:title", content: "How to Book a Plot — Sawargseema Ventures" },
       { property: "og:description", content: "Seven steps from enquiry to registration." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Process,

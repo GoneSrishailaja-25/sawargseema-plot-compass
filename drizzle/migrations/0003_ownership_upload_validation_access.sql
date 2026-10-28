@@ -1,0 +1,2 @@
+ALTER FUNCTION public.validate_ownership_document() SECURITY DEFINER;
+CREATE POLICY ownership_admin_file_read ON storage.objects FOR SELECT TO authenticated USING(bucket_id='ownership-documents' AND public.has_role(auth.uid(),'admin'));

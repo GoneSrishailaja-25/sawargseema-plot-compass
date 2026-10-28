@@ -14,6 +14,8 @@ export const Route = createFileRoute("/layout")({
       { name: "description", content: "Colour-coded layout of every plot: available, reserved and sold." },
       { property: "og:title", content: "Interactive Plot Layout — Sawargseema Ventures" },
       { property: "og:description", content: "Tap any plot to see size, price, phase and facing." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: LayoutPage,
