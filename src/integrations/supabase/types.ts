@@ -14,16 +14,240 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      enquiries: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          message: string
+          mobile: string
+          name: string
+          plot_id: string | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind?: string
+          message?: string
+          mobile: string
+          name: string
+          plot_id?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          message?: string
+          mobile?: string
+          name?: string
+          plot_id?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enquiries_plot_id_fkey"
+            columns: ["plot_id"]
+            isOneToOne: false
+            referencedRelation: "plots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      phases: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          id?: string
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      plots: {
+        Row: {
+          amenities: string
+          created_at: string
+          dimensions: string
+          facing: Database["public"]["Enums"]["plot_facing"]
+          id: string
+          location_note: string
+          phase_id: string | null
+          plot_number: number
+          price_per_sqyd: number
+          size_sqyd: number
+          sold_at: string | null
+          status: Database["public"]["Enums"]["plot_status"]
+          total_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          amenities?: string
+          created_at?: string
+          dimensions?: string
+          facing?: Database["public"]["Enums"]["plot_facing"]
+          id?: string
+          location_note?: string
+          phase_id?: string | null
+          plot_number: number
+          price_per_sqyd: number
+          size_sqyd: number
+          sold_at?: string | null
+          status?: Database["public"]["Enums"]["plot_status"]
+          total_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          amenities?: string
+          created_at?: string
+          dimensions?: string
+          facing?: Database["public"]["Enums"]["plot_facing"]
+          id?: string
+          location_note?: string
+          phase_id?: string | null
+          plot_number?: number
+          price_per_sqyd?: number
+          size_sqyd?: number
+          sold_at?: string | null
+          status?: Database["public"]["Enums"]["plot_status"]
+          total_price?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plots_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "phases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          address: string
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          mobile: string
+        }
+        Insert: {
+          address?: string
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id: string
+          mobile?: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          mobile?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      venture: {
+        Row: {
+          about: string
+          address: string
+          email: string
+          id: number
+          location: string
+          map_embed_url: string
+          name: string
+          phone: string
+          tagline: string
+          total_area_sqyd: number
+          updated_at: string
+          whatsapp: string
+        }
+        Insert: {
+          about?: string
+          address?: string
+          email?: string
+          id?: number
+          location?: string
+          map_embed_url?: string
+          name: string
+          phone?: string
+          tagline?: string
+          total_area_sqyd?: number
+          updated_at?: string
+          whatsapp?: string
+        }
+        Update: {
+          about?: string
+          address?: string
+          email?: string
+          id?: number
+          location?: string
+          map_embed_url?: string
+          name?: string
+          phone?: string
+          tagline?: string
+          total_area_sqyd?: number
+          updated_at?: string
+          whatsapp?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "customer"
+      plot_facing: "north" | "south" | "east" | "west"
+      plot_status: "available" | "reserved" | "sold"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +374,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "customer"],
+      plot_facing: ["north", "south", "east", "west"],
+      plot_status: ["available", "reserved", "sold"],
+    },
   },
 } as const
