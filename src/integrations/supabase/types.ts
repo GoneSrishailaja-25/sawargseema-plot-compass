@@ -286,6 +286,39 @@ export type Database = {
         }
         Relationships: []
       }
+      plot_history: {
+        Row: {
+          action: string
+          after_data: Json | null
+          before_data: Json | null
+          changed_at: string
+          changed_by: string | null
+          id: string
+          plot_id: string
+          plot_number: number
+        }
+        Insert: {
+          action: string
+          after_data?: Json | null
+          before_data?: Json | null
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          plot_id: string
+          plot_number: number
+        }
+        Update: {
+          action?: string
+          after_data?: Json | null
+          before_data?: Json | null
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          plot_id?: string
+          plot_number?: number
+        }
+        Relationships: []
+      }
       plots: {
         Row: {
           amenities: string
@@ -293,7 +326,10 @@ export type Database = {
           dimensions: string
           facing: Database["public"]["Enums"]["plot_facing"]
           id: string
+          information_verified: boolean
+          latitude: number | null
           location_note: string
+          longitude: number | null
           phase_id: string | null
           plot_number: number
           price_per_sqyd: number
@@ -302,6 +338,8 @@ export type Database = {
           status: Database["public"]["Enums"]["plot_status"]
           total_price: number | null
           updated_at: string
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
           amenities?: string
@@ -309,7 +347,10 @@ export type Database = {
           dimensions?: string
           facing?: Database["public"]["Enums"]["plot_facing"]
           id?: string
+          information_verified?: boolean
+          latitude?: number | null
           location_note?: string
+          longitude?: number | null
           phase_id?: string | null
           plot_number: number
           price_per_sqyd: number
@@ -318,6 +359,8 @@ export type Database = {
           status?: Database["public"]["Enums"]["plot_status"]
           total_price?: number | null
           updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
           amenities?: string
@@ -325,7 +368,10 @@ export type Database = {
           dimensions?: string
           facing?: Database["public"]["Enums"]["plot_facing"]
           id?: string
+          information_verified?: boolean
+          latitude?: number | null
           location_note?: string
+          longitude?: number | null
           phase_id?: string | null
           plot_number?: number
           price_per_sqyd?: number
@@ -334,6 +380,8 @@ export type Database = {
           status?: Database["public"]["Enums"]["plot_status"]
           total_price?: number | null
           updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: [
           {

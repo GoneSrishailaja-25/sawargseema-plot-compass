@@ -43,6 +43,13 @@
       "when": 1793279536774,
       "tag": "0005_ownership_admin_review",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793287997932,
+      "tag": "0006_plot_mapping_and_history",
+      "breakpoints": true
     }
   ]
 }
