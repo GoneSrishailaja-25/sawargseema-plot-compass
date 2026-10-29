@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, Upload, Bell, ShieldCheck, MessageSquare, Plus } from "lucide-react";
+import { Download, Upload, Bell, ShieldCheck, MessageSquare, Plus, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { plotsQuery } from "@/lib/data";
-import { DOCUMENT_TYPES, REVIEW_STATUSES, ownershipQuery, reviewSchema, validateOwnershipFile, verificationProgress } from "@/lib/ownership";
+import { DOCUMENT_TYPES, REVIEW_STATUSES, ownershipQuery, reviewSchema, adminReviewSchema, validateOwnershipFile, verificationProgress } from "@/lib/ownership";
 
 const selectClass = "h-10 w-full rounded-md border bg-background px-3 text-sm";
 
@@ -65,6 +65,18 @@ export function OwnershipWorkspace({ userId }: { userId: string }) {
     if (error) throw new Error(error.message);
     const a = document.createElement("a"); a.href = signed.signedUrl; a.rel = "noopener noreferrer"; a.target = "_blank"; a.click();
   });
+  const viewDocument = (path: string) => {
+    const preview = window.open("about:blank", "_blank");
+    if (!preview) { toast.error("Allow pop-ups to view this document"); return; }
+    preview.opener = null;
+    return act(async () => {
+      try {
+        const { data: signed, error } = await supabase.storage.from("ownership-documents").createSignedUrl(path, 60);
+        if (error) throw new Error(error.message);
+        preview.location.replace(signed.signedUrl);
+      } catch (error) { preview.close(); throw error; }
+    });
+  };
   if (isPending) return <p role="status" className="py-12 text-muted-foreground">Loading ownership records…</p>;
   if (error) return <div role="alert" className="py-8"><p>Ownership records could not be loaded.</p><Button variant="outline" onClick={refresh}>Try again</Button></div>;
   return <div className="space-y-8">
@@ -84,7 +96,7 @@ export function OwnershipWorkspace({ userId }: { userId: string }) {
       <div className="max-w-md"><Label htmlFor="ownership-record">Ownership record</Label><select id="ownership-record" className={selectClass} value={active.id} onChange={e => setSelected(e.target.value)}>{data?.cases.map(c => <option key={c.id} value={c.id}>Plot {plots.find(p => p.id === c.plot_id)?.plot_number ?? "—"}</option>)}</select></div>
       <section className="space-y-3"><h2 className="flex items-center gap-2 text-xl font-semibold"><ShieldCheck className="h-5 w-5 text-primary" />Verification progress</h2><div className="flex justify-between gap-4 text-sm"><span>{progress.verified} of {progress.total} document categories verified</span><span>{progress.percent}%</span></div><Progress value={progress.percent} aria-label="Verification progress" />{progress.missing.length > 0 && <p className="text-sm text-destructive">Missing: {progress.missing.map(c => DOCUMENT_TYPES[c as keyof typeof DOCUMENT_TYPES]).join(", ")}</p>}</section>
       {isAdmin && <section className="space-y-3 border-y py-6"><h2 className="text-xl font-semibold">Upload document</h2><div className="grid items-end gap-3 sm:grid-cols-3"><div><Label htmlFor="document-type">Document type</Label><select id="document-type" className={selectClass} value={category} onChange={e => setCategory(e.target.value as keyof typeof DOCUMENT_TYPES)}>{Object.entries(DOCUMENT_TYPES).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></div><div><Label htmlFor="ownership-file">PDF, PNG or JPG · up to 10 MB</Label><Input key={fileKey} id="ownership-file" type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={e => setFile(e.target.files?.[0] ?? null)} /></div><Button disabled={busy || !file} onClick={upload}><Upload className="h-4 w-4" />Upload document</Button></div></section>}
-      <section className="space-y-4"><h2 className="text-xl font-semibold">Documents</h2>{documents.length === 0 && <p className="text-muted-foreground">No documents uploaded yet.</p>}{documents.map(d => <article key={d.id} className="rounded-lg border bg-card p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0"><p className="font-semibold">{DOCUMENT_TYPES[d.category as keyof typeof DOCUMENT_TYPES]}</p><p className="break-all text-sm text-muted-foreground">{d.file_name}</p></div><div className="flex items-center gap-2"><Badge variant={d.status === "Rejected" ? "destructive" : d.status === "Verified" ? "default" : "secondary"}>{d.status}</Badge><Button variant="outline" size="icon" aria-label={`Download ${d.file_name}`} title="Download document" disabled={busy} onClick={() => download(d.storage_path)}><Download className="h-4 w-4" /></Button></div></div>{d.review_note && <p className="mt-3 break-words text-sm">Officer note: {d.review_note}</p>}{isOfficer && <ReviewForm documentId={d.id} initialStatus={d.status} busy={busy} onSave={(status, note) => act(async () => { const parsed = reviewSchema.parse({ document: d.id, status, note }); const { error } = await supabase.rpc("review_ownership_document", { _document: parsed.document, _status: parsed.status, _note: parsed.note }); if (error) throw new Error(error.message); toast.success("Officer review saved"); })} />}
+      <section className="space-y-4"><h2 className="text-xl font-semibold">Documents</h2>{documents.length === 0 && <p className="text-muted-foreground">No documents uploaded yet.</p>}{documents.map(d => <article key={d.id} className="rounded-lg border bg-card p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0"><p className="font-semibold">{DOCUMENT_TYPES[d.category as keyof typeof DOCUMENT_TYPES]}</p><p className="break-all text-sm text-muted-foreground">{d.file_name}</p></div><div className="flex items-center gap-2"><Badge variant={d.status === "Rejected" ? "destructive" : d.status === "Verified" ? "default" : "secondary"}>{d.status}</Badge><Button variant="outline" size="icon" aria-label={`View ${d.file_name}`} title="View document" disabled={busy} onClick={() => viewDocument(d.storage_path)}><Eye className="h-4 w-4" /></Button><Button variant="outline" size="icon" aria-label={`Download ${d.file_name}`} title="Download document" disabled={busy} onClick={() => download(d.storage_path)}><Download className="h-4 w-4" /></Button></div></div>{d.review_note && <p className="mt-3 break-words text-sm">Review note: {d.review_note}</p>}{(isAdmin || isOfficer) && <ReviewForm key={`${d.id}-${d.status}-${d.reviewed_at}`} isAdmin={isAdmin} documentId={d.id} initialStatus={d.status} busy={busy} onSave={(status, note) => act(async () => { const parsed = (isAdmin ? adminReviewSchema : reviewSchema).parse({ document: d.id, status, note }); const { error } = await supabase.rpc("review_ownership_document", { _document: parsed.document, _status: parsed.status, _note: parsed.note }); if (error) throw new Error(error.message); toast.success(isAdmin ? "Admin decision saved" : "Officer review saved"); })} />}
         {data?.reviews.some(r => r.document_id === d.id) && <details className="mt-4 text-sm"><summary className="cursor-pointer text-muted-foreground">Review history</summary>{data?.reviews.filter(r => r.document_id === d.id).map(r => <p key={r.id} className="mt-2 break-words">{r.status} · {new Date(r.created_at).toLocaleString("en-IN")}{r.note && ` — ${r.note}`}</p>)}</details>}
       </article>)}</section>
       <section className="space-y-4 border-t pt-6"><h2 className="flex items-center gap-2 text-xl font-semibold"><MessageSquare className="h-5 w-5" />Questions for admin</h2>{active.customer_id === userId && <div className="space-y-3"><Label htmlFor="ownership-question">Your question</Label><Textarea id="ownership-question" maxLength={1000} value={question} onChange={e => setQuestion(e.target.value)} /><Button disabled={busy || !question.trim()} onClick={() => act(async () => { const { error } = await supabase.from("ownership_questions").insert({ case_id: active.id, question: question.trim(), user_id: userId }); if (error) throw new Error(error.message); setQuestion(""); toast.success("Question sent to admin"); })}>Send question</Button></div>}{data?.questions.filter(q => q.case_id === active.id).map(q => <article key={q.id} className="rounded-lg border p-4"><p className="break-words text-sm">{q.question}</p>{q.reply && <p className="mt-3 break-words text-sm text-primary">Admin: {q.reply}</p>}{isAdmin && <ReplyForm busy={busy} onSave={reply => act(async () => { const { error } = await supabase.rpc("reply_ownership_question", { _question: q.id, _reply: reply }); if (error) throw new Error(error.message); toast.success("Reply sent"); })} />}</article>)}</section>
@@ -92,10 +104,11 @@ export function OwnershipWorkspace({ userId }: { userId: string }) {
   </div>;
 }
 
-function ReviewForm({ documentId, initialStatus, busy, onSave }: { documentId: string; initialStatus: string; busy: boolean; onSave: (status: string, note: string) => Promise<void> }) {
+function ReviewForm({ documentId, initialStatus, busy, isAdmin, onSave }: { documentId: string; initialStatus: string; busy: boolean; isAdmin: boolean; onSave: (status: string, note: string) => Promise<void> }) {
   const [status, setStatus] = useState(initialStatus);
   const [note, setNote] = useState("");
-  return <div className="mt-4 grid gap-3 border-t pt-4 sm:grid-cols-3"><div><Label htmlFor={`status-${documentId}`}>Review status</Label><select id={`status-${documentId}`} className={selectClass} value={status} onChange={e => setStatus(e.target.value)}>{REVIEW_STATUSES.map(s => <option key={s}>{s}</option>)}</select></div><div><Label htmlFor={`note-${documentId}`}>Review note {status === "Rejected" ? "(required)" : "(optional)"}</Label><Textarea id={`note-${documentId}`} maxLength={2000} value={note} onChange={e => setNote(e.target.value)} /></div><Button className="self-end" disabled={busy || (status === "Rejected" && !note.trim())} onClick={() => onSave(status, note)}>Save officer review</Button></div>;
+  const reasonRequired = status === "Rejected" || (isAdmin && status === "Verified");
+  return <div className="mt-4 grid gap-3 border-t pt-4 sm:grid-cols-3"><div><Label htmlFor={`status-${documentId}`}>{isAdmin ? "Admin decision" : "Review status"}</Label><select id={`status-${documentId}`} className={selectClass} value={status} onChange={e => setStatus(e.target.value)}>{REVIEW_STATUSES.map(s => <option key={s} value={s}>{isAdmin && s === "Verified" ? "Approve — Verified" : isAdmin && s === "Rejected" ? "Reject — Rejected" : s}</option>)}</select></div><div><Label htmlFor={`note-${documentId}`}>{isAdmin ? "Decision reason" : "Review note"} {reasonRequired ? "(required)" : "(optional)"}</Label><Textarea id={`note-${documentId}`} required={reasonRequired} maxLength={2000} value={note} onChange={e => setNote(e.target.value)} /></div><Button className="self-end" disabled={busy || (reasonRequired && !note.trim())} onClick={() => onSave(status, note)}>{isAdmin ? "Save admin decision" : "Save officer review"}</Button></div>;
 }
 function ReplyForm({ busy, onSave }: { busy: boolean; onSave: (reply: string) => Promise<void> }) {
   const [reply, setReply] = useState("");
