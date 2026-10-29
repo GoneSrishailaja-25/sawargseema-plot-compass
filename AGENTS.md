@@ -13,5 +13,5 @@
 - Auth uses mobile + password; mobile maps to a synthetic email via `mobileToEmail` in src/lib/data.ts (auto-confirm on) — real email is optional profile data.
 - First registered account becomes admin (handle_new_user trigger); roles live only in public.user_roles, checked via has_role in RLS.
 - Plot data is read client-side via shared queryOptions in src/lib/data.ts; realtime on `plots` in __root invalidates the cache so charts stay live.
-- Ownership files are private and case-scoped to assigned customers, admins and officers; RLS and explicit database review functions enforce permissions, and only officer reviews can change document status.
+- Ownership files are private and case-scoped to assigned customers, admins and officers; the existing database review function enforces admin-or-officer authorization and records decisions in the existing audit trail, avoiding parallel review workflows.
 - Ownership notifications are persistent in-app notices; customer ownership queries are keyed by identity and cleared on sign-out to avoid cross-account cache exposure.
