@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const DOCUMENT_TYPES = { ownership: "Ownership document", sale_deed: "Sale deed", approval: "Approval record" } as const;
 export const REVIEW_STATUSES = ["Pending", "Verified", "Rejected"] as const;
 export const reviewSchema = z.object({ document: z.string().uuid(), status: z.enum(REVIEW_STATUSES), note: z.string().trim().max(2000) }).refine(v => v.status !== "Rejected" || v.note.length > 0, { message: "Add a reason for rejection" });
+export const adminReviewSchema = reviewSchema.refine(v => v.status !== "Verified" || v.note.length > 0, { message: "Add a reason for approval" });
 export function verificationProgress(documents: { category: string; status: string }[]) {
   const categories = Object.keys(DOCUMENT_TYPES);
   const verified = categories.filter(category => documents.some(d => d.category === category && d.status === "Verified")).length;
