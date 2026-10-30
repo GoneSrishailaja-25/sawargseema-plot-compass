@@ -1,0 +1,13 @@
+import { describe, expect, it } from "vitest";
+import type { Plot } from "@/lib/data";
+import { emptyFilters, filterPlots, hasCoordinates, missingPlotDetails } from "@/lib/plot-information";
+
+const plot: Plot = { id: "plot-a", plot_number: 12, phase_id: null, size_sqyd: 200.5, price_per_sqyd: 10000, total_price: 2005000, facing: "east", status: "available", dimensions: "30 × 60 ft", location_note: "North entrance", amenities: "Water", latitude: null, longitude: null, information_verified: false, verified_at: null, verified_by: null, sold_at: null, created_at: "2026-10-29", updated_at: "2026-10-29" };
+describe("Accurate plot information", () => {
+  it("never maps missing coordinates or invents a zero location", () => { expect(hasCoordinates(plot)).toBe(false); expect(hasCoordinates({ latitude: null, longitude: 0 })).toBe(false); expect(hasCoordinates({ latitude: 0, longitude: 0 })).toBe(true); expect(hasCoordinates({ latitude: 91, longitude: 30 })).toBe(false); });
+  it("reports missing dimensions, location, coordinates and price", () => { expect(missingPlotDetails({ ...plot, dimensions: "", location_note: " ", price_per_sqyd: 0, total_price: null })).toEqual(["Dimensions", "Location", "Coordinates", "Price"]); });
+  it("keeps unverified details out of verified-only results", () => { expect(filterPlots([plot], { ...emptyFilters, quality: "verified" })).toEqual([]); expect(filterPlots([{ ...plot, information_verified: true }], { ...emptyFilters, quality: "verified" })).toHaveLength(1); });
+  it("searches exact database plot numbers and locations", () => { expect(filterPlots([plot], { ...emptyFilters, search: "12" })).toEqual([plot]); expect(filterPlots([plot], { ...emptyFilters, search: "north entrance" })).toEqual([plot]); expect(filterPlots([plot], { ...emptyFilters, search: "unknown" })).toEqual([]); });
+  it("filters Available, Reserved and Sold independently", () => { const rows = [plot, { ...plot, id: "b", status: "reserved" as const }, { ...plot, id: "c", status: "sold" as const }]; for (const status of ["available", "reserved", "sold"]) expect(filterPlots(rows, { ...emptyFilters, status }).map(p => p.status)).toEqual([status]); });
+  it("preserves fractional area and excludes unknown totals from price filters", () => { expect(filterPlots([plot], { ...emptyFilters, minArea: "200.5", maxArea: "200.5", maxPrice: "20.05" })).toEqual([plot]); expect(filterPlots([plot], { ...emptyFilters, maxArea: "200" })).toEqual([]); expect(filterPlots([{ ...plot, total_price: null }], { ...emptyFilters, maxPrice: "30" })).toEqual([]); });
+});
