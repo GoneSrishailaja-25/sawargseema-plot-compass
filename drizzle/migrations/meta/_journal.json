@@ -50,6 +50,13 @@
       "when": 1793287997932,
       "tag": "0006_plot_mapping_and_history",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793361811512,
+      "tag": "0007_restrict_plot_history_grants",
+      "breakpoints": true
     }
   ]
 }
