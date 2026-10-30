@@ -14,6 +14,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { LoginRequired, PageHeader } from "@/components/site/SiteChrome";
 import { Charts, StatCards } from "@/components/site/Stats";
 import { statusBadge } from "@/components/site/PlotDetail";
+import { PlotHistory } from "@/components/site/PlotHistory";
+import { hasCoordinates, missingPlotDetails } from "@/lib/plot-information";
 import { OwnershipWorkspace } from "@/components/site/OwnershipWorkspace";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -64,6 +66,7 @@ function Admin() {
           <TabsList className="flex h-auto flex-wrap">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="plots">Plots</TabsTrigger>
+            <TabsTrigger value="history">Plot history</TabsTrigger>
             <TabsTrigger value="phases">Phases</TabsTrigger>
             <TabsTrigger value="enquiries">Enquiries</TabsTrigger>
             <TabsTrigger value="customers">Customers</TabsTrigger>
@@ -75,6 +78,7 @@ function Admin() {
             <Charts plots={plots} phases={phases} />
           </TabsContent>
           <TabsContent value="plots" className="mt-6"><PlotsAdmin /></TabsContent>
+          <TabsContent value="history" className="mt-6"><PlotHistory userId={user.id} /></TabsContent>
           <TabsContent value="phases" className="mt-6"><PhasesAdmin /></TabsContent>
           <TabsContent value="enquiries" className="mt-6"><EnquiriesAdmin /></TabsContent>
           <TabsContent value="customers" className="mt-6"><CustomersAdmin /></TabsContent>
@@ -88,9 +92,9 @@ function Admin() {
 
 type PlotForm = {
   id?: string; plot_number: string; phase_id: string; size_sqyd: string; price_per_sqyd: string;
-  facing: PlotFacing; status: PlotStatus; dimensions: string; location_note: string; amenities: string;
+  facing: PlotFacing; status: PlotStatus; dimensions: string; location_note: string; amenities: string; latitude: string; longitude: string;
 };
-const emptyPlot: PlotForm = { plot_number: "", phase_id: "", size_sqyd: "", price_per_sqyd: "", facing: "east", status: "available", dimensions: "", location_note: "", amenities: "" };
+const emptyPlot: PlotForm = { plot_number: "", phase_id: "", size_sqyd: "", price_per_sqyd: "", facing: "east", status: "available", dimensions: "", location_note: "", amenities: "", latitude: "", longitude: "" };
 
 function PlotsAdmin() {
   const qc = useQueryClient();
@@ -98,17 +102,20 @@ function PlotsAdmin() {
   const { data: phases = [] } = useQuery(phasesQuery);
   const [edit, setEdit] = useState<PlotForm | null>(null);
   const phaseName = (id: string | null) => phases.find((p) => p.id === id)?.name ?? "—";
-  const refresh = () => qc.invalidateQueries({ queryKey: ["plots"] });
+  const refresh = () => { qc.invalidateQueries({ queryKey: ["plots"] }); qc.invalidateQueries({ queryKey: ["plot-history"] }); };
 
   const save = async () => {
     if (!edit) return;
+    const latitude = edit.latitude.trim() === "" ? null : Number(edit.latitude);
+    const longitude = edit.longitude.trim() === "" ? null : Number(edit.longitude);
+    if ((latitude !== null || longitude !== null) && !hasCoordinates({ latitude, longitude })) return void toast.error("Enter both valid latitude and longitude");
     const n = Number(edit.plot_number), sz = Number(edit.size_sqyd), pr = Number(edit.price_per_sqyd);
     if (!Number.isInteger(n) || n <= 0) return void toast.error("Plot number must be a positive whole number");
     if (!(sz > 0)) return void toast.error("Size must be greater than 0");
     if (!(pr >= 0) || edit.price_per_sqyd === "") return void toast.error("Enter a valid price");
     const row = {
       plot_number: n, phase_id: edit.phase_id || null, size_sqyd: sz, price_per_sqyd: pr,
-      facing: edit.facing, status: edit.status, dimensions: edit.dimensions, location_note: edit.location_note, amenities: edit.amenities,
+      facing: edit.facing, status: edit.status, dimensions: edit.dimensions, location_note: edit.location_note, amenities: edit.amenities, latitude, longitude,
     };
     const { error } = edit.id ? await supabase.from("plots").update(row).eq("id", edit.id) : await supabase.from("plots").insert(row);
     if (error) return void toast.error(error.message.includes("duplicate") ? "Plot number already exists" : error.message);
@@ -133,7 +140,7 @@ function PlotsAdmin() {
   const exportPlots = () =>
     downloadCsv("plots.csv", plots.map((p) => ({
       plot_number: p.plot_number, phase: phaseName(p.phase_id), size_sqyd: p.size_sqyd, price_per_sqyd: p.price_per_sqyd,
-      total_price: p.total_price, facing: p.facing, status: p.status, dimensions: p.dimensions, sold_at: p.sold_at ?? "",
+      total_price: p.total_price, facing: p.facing, status: p.status, dimensions: p.dimensions, location: p.location_note, latitude: p.latitude, longitude: p.longitude, information_verified: p.information_verified, sold_at: p.sold_at ?? "",
     })));
 
   return (
@@ -147,7 +154,7 @@ function PlotsAdmin() {
           <TableHeader>
             <TableRow>
               <TableHead>Plot</TableHead><TableHead>Phase</TableHead><TableHead>Size</TableHead><TableHead>₹/sq.yd</TableHead>
-              <TableHead>Total</TableHead><TableHead>Facing</TableHead><TableHead>Status</TableHead><TableHead />
+              <TableHead>Information</TableHead><TableHead>Total</TableHead><TableHead>Facing</TableHead><TableHead>Status</TableHead><TableHead />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -157,7 +164,7 @@ function PlotsAdmin() {
                 <TableCell>{phaseName(p.phase_id)}</TableCell>
                 <TableCell>{Number(p.size_sqyd)}</TableCell>
                 <TableCell>{inr(Number(p.price_per_sqyd))}</TableCell>
-                <TableCell>{inr(Number(p.total_price))}</TableCell>
+                <TableCell>{p.information_verified ? "Admin-verified" : "Unverified"}{missingPlotDetails(p).length > 0 && <p className="text-xs text-destructive">Missing: {missingPlotDetails(p).join(", ")}</p>}</TableCell><TableCell>{p.total_price !== null && Number(p.price_per_sqyd) > 0 ? inr(Number(p.total_price)) : "Not provided"}</TableCell>
                 <TableCell>{cap(p.facing)}</TableCell>
                 <TableCell>
                   <select className="h-8 rounded-md border bg-background px-1 text-xs" value={p.status} onChange={(e) => quickStatus(p, e.target.value as PlotStatus)}>
@@ -168,8 +175,9 @@ function PlotsAdmin() {
                   <Button size="icon" variant="ghost" onClick={() => setEdit({
                     id: p.id, plot_number: String(p.plot_number), phase_id: p.phase_id ?? "", size_sqyd: String(p.size_sqyd),
                     price_per_sqyd: String(p.price_per_sqyd), facing: p.facing, status: p.status, dimensions: p.dimensions,
-                    location_note: p.location_note, amenities: p.amenities,
+                    location_note: p.location_note, amenities: p.amenities, latitude: p.latitude === null ? "" : String(p.latitude), longitude: p.longitude === null ? "" : String(p.longitude),
                   })}><Pencil className="h-4 w-4" /></Button>
+                  <Button size="sm" variant="outline" disabled={p.information_verified || missingPlotDetails(p).length > 0} onClick={async () => { if (!confirm(`Confirm you have checked all details for Plot ${p.plot_number}? This is not ownership document approval.`)) return; const { error } = await supabase.from("plots").update({ information_verified: true }).eq("id", p.id); if (error) return void toast.error(error.message); toast.success("Plot information verified"); refresh(); }}>Verify details</Button>
                   <Button size="icon" variant="ghost" onClick={() => del(p)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                 </TableCell>
               </TableRow>
@@ -179,7 +187,7 @@ function PlotsAdmin() {
       </div>
 
       <Dialog open={!!edit} onOpenChange={(o) => !o && setEdit(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
           <DialogHeader><DialogTitle>{edit?.id ? "Edit plot" : "Add plot"}</DialogTitle></DialogHeader>
           {edit && (
             <div className="grid grid-cols-2 gap-3">
@@ -204,6 +212,7 @@ function PlotsAdmin() {
               </div>
               <div className="col-span-2"><Label>Dimensions</Label><Input value={edit.dimensions} onChange={(e) => setEdit({ ...edit, dimensions: e.target.value })} /></div>
               <div className="col-span-2"><Label>Location</Label><Input value={edit.location_note} onChange={(e) => setEdit({ ...edit, location_note: e.target.value })} /></div>
+              <div><Label htmlFor="plot-latitude">Latitude</Label><Input id="plot-latitude" type="number" step="any" min="-90" max="90" value={edit.latitude} onChange={e => setEdit({ ...edit, latitude: e.target.value })} /></div><div><Label htmlFor="plot-longitude">Longitude</Label><Input id="plot-longitude" type="number" step="any" min="-180" max="180" value={edit.longitude} onChange={e => setEdit({ ...edit, longitude: e.target.value })} /></div>
               <div className="col-span-2"><Label>Amenities & nearby</Label><Textarea value={edit.amenities} onChange={(e) => setEdit({ ...edit, amenities: e.target.value })} /></div>
               <p className="col-span-2 text-sm">Total: <b>{inr((Number(edit.size_sqyd) || 0) * (Number(edit.price_per_sqyd) || 0))}</b></p>
               <Button className="col-span-2" onClick={save}>Save plot</Button>

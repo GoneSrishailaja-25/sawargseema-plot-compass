@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { LoginRequired, PageHeader } from "@/components/site/SiteChrome";
+import { PlotMap } from "@/components/site/PlotMap";
 import { PlotLayout } from "@/components/site/PlotLayout";
 import { PlotDetailDialog } from "@/components/site/PlotDetail";
 import { useAuth } from "@/lib/auth";
@@ -30,7 +31,7 @@ function LayoutPage() {
     <>
       <PageHeader title="Plot Layout" sub="Green = available, orange = reserved, red = sold. Tap a plot for details." />
       <div className="mx-auto max-w-7xl px-4 py-8">
-        {loading ? null : user ? <PlotLayout plots={plots} phases={phases} onSelect={setOpen} /> : <LoginRequired what="the plot layout" />}
+        {loading ? null : user ? <div className="space-y-8"><PlotMap plots={plots} onSelect={setOpen} /><section><h2 className="mb-4 text-xl font-semibold">Illustrative phase layout</h2><PlotLayout plots={plots} phases={phases} onSelect={setOpen} /></section></div> : <LoginRequired what="the plot layout" />}
       </div>
       <PlotDetailDialog plot={open} onClose={() => setOpen(null)} />
     </>
