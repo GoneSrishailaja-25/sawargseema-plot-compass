@@ -37,7 +37,7 @@ export function PlotLayout({ plots, phases, onSelect }: { plots: Plot[]; phases:
           ))}
           {phaseId === "all" && unassigned.length > 0 && <Block title="Unassigned" plots={unassigned} onSelect={onSelect} />}
         </div>
-        <p className="mt-4 text-center text-xs text-muted-foreground">Illustrative layout — not an approved layout plan.</p>
+        <p className="mt-4 text-center text-xs font-semibold text-muted-foreground">SAMPLE LAYOUT — not an actual surveyed boundary map or approved layout plan.</p>
       </div>
     </div>
   );
@@ -51,15 +51,16 @@ function Block({ title, plots, onSelect }: { title: string; plots: Plot[]; onSel
       <p className="mb-2 text-sm font-semibold text-navy">{title}</p>
       {rows.map((row, i) => (
         <div key={i}>
-          <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-8">
+          <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-4 md:grid-cols-8">
             {row.map((p) => (
               <button
                 key={p.id}
                 onClick={() => onSelect(p)}
-                className={cn("aspect-[4/5] rounded-md text-sm font-bold text-primary-foreground shadow-sm transition hover:scale-105", tile[p.status])}
+                className={cn("flex aspect-[3/4] flex-col items-center justify-center rounded-sm border-2 border-card text-primary-foreground shadow-sm transition hover:scale-105", tile[p.status])}
                 title={`Plot ${p.plot_number} · ${p.status}`}
               >
-                {p.plot_number}
+                <span className="text-base font-bold">{p.plot_number}</span>
+                <span className="text-[10px] opacity-90">{Number(p.size_sqyd)} sq.yd</span>
               </button>
             ))}
           </div>

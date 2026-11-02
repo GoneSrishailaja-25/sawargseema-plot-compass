@@ -1,15 +1,16 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Compass } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { hasCoordinates, missingPlotDetails } from "@/lib/plot-information";
-import { cap, inr, num, phasesQuery, type Plot } from "@/lib/data";
+import { cap, inr, num, phasesQuery, STATUSES, type Plot, type PlotStatus } from "@/lib/data";
 
 export const statusBadge: Record<string, string> = {
   available: "bg-available text-primary-foreground",
@@ -19,7 +20,7 @@ export const statusBadge: Record<string, string> = {
 
 export function PlotDetailDialog({ plot, onClose }: { plot: Plot | null; onClose: () => void }) {
   const { data: phases = [] } = useQuery(phasesQuery);
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
   const phase = phases.find((p) => p.id === plot?.phase_id);
@@ -67,7 +68,8 @@ export function PlotDetailDialog({ plot, onClose }: { plot: Plot | null; onClose
             </dl>
             {missingPlotDetails(plot).length > 0 && <p className="text-xs text-destructive">Missing: {missingPlotDetails(plot).join(", ")}</p>}
             <p className="text-xs text-muted-foreground">Prices exclude registration charges, stamp duty and applicable taxes. Plot information verification is separate from ownership document approval.</p>
-            {plot.status === "available" && user && (
+            {isAdmin && <AdminEdit key={plot.id} plot={plot} onDone={onClose} />}
+            {plot.status === "available" && user && !isAdmin && (
               <div className="space-y-2 border-t pt-4">
                 <Textarea placeholder="Message (optional)" value={msg} onChange={(e) => setMsg(e.target.value)} maxLength={1000} />
                 <Button className="w-full" onClick={book} disabled={busy}>Request reservation</Button>
@@ -77,6 +79,36 @@ export function PlotDetailDialog({ plot, onClose }: { plot: Plot | null; onClose
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+function AdminEdit({ plot, onDone }: { plot: Plot; onDone: () => void }) {
+  const qc = useQueryClient();
+  const [f, setF] = useState({ size: String(plot.size_sqyd), price: String(plot.price_per_sqyd), dimensions: plot.dimensions, status: plot.status });
+  const [busy, setBusy] = useState(false);
+  const save = async () => {
+    const size = Number(f.size), price = Number(f.price);
+    if (!(size > 0) || !(price >= 0)) return void toast.error("Enter a valid size and price.");
+    setBusy(true);
+    const { error } = await supabase.from("plots").update({ size_sqyd: size, price_per_sqyd: price, dimensions: f.dimensions.trim(), status: f.status }).eq("id", plot.id);
+    setBusy(false);
+    if (error) return void toast.error("Could not save plot.");
+    toast.success(`Plot ${plot.plot_number} saved.`);
+    await qc.invalidateQueries({ queryKey: ["plots"] });
+    onDone();
+  };
+  return (
+    <div className="grid grid-cols-2 gap-3 border-t pt-4 text-sm">
+      <p className="col-span-2 font-semibold">Admin: edit plot</p>
+      <label className="space-y-1"><span className="text-xs text-muted-foreground">Size (sq.yd)</span><Input type="number" step="0.01" value={f.size} onChange={(e) => setF({ ...f, size: e.target.value })} /></label>
+      <label className="space-y-1"><span className="text-xs text-muted-foreground">Price / sq.yd</span><Input type="number" value={f.price} onChange={(e) => setF({ ...f, price: e.target.value })} /></label>
+      <label className="space-y-1"><span className="text-xs text-muted-foreground">Dimensions</span><Input value={f.dimensions} onChange={(e) => setF({ ...f, dimensions: e.target.value })} /></label>
+      <label className="space-y-1"><span className="text-xs text-muted-foreground">Status</span>
+        <select className="h-9 w-full rounded-md border bg-background px-2" value={f.status} onChange={(e) => setF({ ...f, status: e.target.value as PlotStatus })}>
+          {STATUSES.map((s) => <option key={s} value={s}>{cap(s)}</option>)}
+        </select></label>
+      <Button className="col-span-2" onClick={save} disabled={busy}>Save changes</Button>
+    </div>
   );
 }
 
