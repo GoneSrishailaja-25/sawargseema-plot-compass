@@ -7,6 +7,7 @@ import { PlotLayout } from "@/components/site/PlotLayout";
 import { PlotDetailDialog } from "@/components/site/PlotDetail";
 import { useAuth } from "@/lib/auth";
 import { phasesQuery, plotsQuery, type Plot } from "@/lib/data";
+import { hasCoordinates } from "@/lib/plot-information";
 
 export const Route = createFileRoute("/layout")({
   head: () => ({
@@ -31,7 +32,7 @@ function LayoutPage() {
     <>
       <PageHeader title="Plot Layout" sub="Green = available, orange = reserved, red = sold. Tap a plot for details." />
       <div className="mx-auto max-w-7xl px-4 py-8">
-        {loading ? null : user ? <div className="space-y-8"><PlotMap plots={plots} onSelect={setOpen} /><section><h2 className="mb-4 text-xl font-semibold">Illustrative phase layout</h2><PlotLayout plots={plots} phases={phases} onSelect={setOpen} /></section></div> : <LoginRequired what="the plot layout" />}
+        {loading ? null : user ? <div className="space-y-8"><section><h2 className="mb-1 text-xl font-semibold">Sample plot layout ({plots.length} plots)</h2><p className="mb-4 text-sm text-muted-foreground">For demonstration only — not an actual surveyed boundary map.</p><PlotLayout plots={plots} phases={phases} onSelect={setOpen} /></section>{plots.some(hasCoordinates) && <section><h2 className="mb-4 text-xl font-semibold">Saved plot locations</h2><PlotMap plots={plots} onSelect={setOpen} /></section>}</div> : <LoginRequired what="the plot layout" />}
       </div>
       <PlotDetailDialog plot={open} onClose={() => setOpen(null)} />
     </>
