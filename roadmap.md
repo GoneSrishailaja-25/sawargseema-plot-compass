@@ -9,3 +9,5 @@
 - [x] Add exact coordinates, explicit information verification, and secure admin change history.
 - [x] Extend plot search, filters, comparison and geographic map using database records.
 - [x] Verify admin editing, history, comparison and regression tests; live Google Maps rendering requires user verification on the published domain.
+- [ ] Plot layout page: sample rectangular layout first, admin edit in plot popup
+- [ ] Logo: symbol-only + full logo, transparent
