@@ -11,3 +11,4 @@
 - [x] Verify admin editing, history, comparison and regression tests; live Google Maps rendering requires user verification on the published domain.
 - [x] Plot layout page: sample rectangular layout first, admin edit in plot popup
 - [x] Logo: symbol-only + full logo, transparent
+- [ ] Logo v2: Signature S (main, symbol, white, dark, transparent)
